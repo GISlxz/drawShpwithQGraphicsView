@@ -111,34 +111,55 @@ QString MapScene::getCSName()
     }
 }
 
-void MapScene::drawPolygons(GeoData *geodata)
+void MapScene::drawShp(GeoData *geodata)
 {
     OGRLayer* poLayer = geodata->getDataUniquePtr()->GetLayer(0);
     if (poLayer == nullptr) {
         qDebug() << "无效图层";
         return;
     }
-    for(auto& poFeature:poLayer)
-        addPolygontoScene(poFeature);
+    for(auto& poFeature:poLayer){
+        auto poGeometry = poFeature->GetGeometryRef();
+        if(poGeometry == nullptr)
+            return;
+        if(wkbFlatten(poGeometry->getGeometryType()) == wkbPolygon)
+            addPolygontoScene(poGeometry);
+        if(wkbFlatten(poGeometry->getGeometryType()) == wkbLineString)
+            addLineStringtoScene(poGeometry);
+    }
 }
 
-void MapScene::addPolygontoScene(OGRFeatureUniquePtr &tarPolygon)
+void MapScene::addPolygontoScene(OGRGeometry* poGeometry)
 {
     QPolygonF polygon;
-    auto poGeometry = tarPolygon->GetGeometryRef();
-    if (poGeometry != nullptr && wkbFlatten(poGeometry->getGeometryType()) == wkbPolygon) {
-        // 输出多边形的顶点
-        OGRPolygon* poPolygon = static_cast<OGRPolygon*>(poGeometry);
-        OGRLinearRing* poExteriorRing = poPolygon->getExteriorRing();
-        if (poExteriorRing != nullptr) {
-            int nVertices = poExteriorRing->getNumPoints();
-            for (int i = 0; i < nVertices; i++) {
-                polygon<<CSPoint2ScenePoint({poExteriorRing->getX(i),poExteriorRing->getY(i)});
-            }
+    // 输出多边形的顶点
+    OGRPolygon* poPolygon = static_cast<OGRPolygon*>(poGeometry);
+    OGRLinearRing* poExteriorRing = poPolygon->getExteriorRing();
+    if (poExteriorRing != nullptr) {
+        int nVertices = poExteriorRing->getNumPoints();
+        for (int i = 0; i < nVertices; i++) {
+            polygon<<CSPoint2ScenePoint({poExteriorRing->getX(i),poExteriorRing->getY(i)});
         }
     }
     QGraphicsPolygonItem* polygonItem = new QGraphicsPolygonItem(polygon);
     this->addItem(polygonItem);
+}
+
+void MapScene::addLineStringtoScene(OGRGeometry *poGeometry)
+{
+    OGRLineString* poLineString = static_cast<OGRLineString*>(poGeometry);
+    if (poLineString != nullptr) {
+        // 创建一个路径
+        QPainterPath path;
+        // 输出折线顶点
+        path.moveTo(CSPoint2ScenePoint({poLineString->getX(0),poLineString->getY(0)}));
+        int numPoints = poLineString->getNumPoints(); // 获取顶点数
+        for (int i = 1; i < numPoints; i++) {
+            path.lineTo(CSPoint2ScenePoint({poLineString->getX(i),poLineString->getY(i)}));
+        }
+        QGraphicsPathItem *pathItem = new QGraphicsPathItem(path);
+        this->addItem(pathItem);
+    }
 }
 
 void MapScene::moveExtent(QPoint movePoint)
@@ -166,4 +187,14 @@ float MapScene::scale() const
 void MapScene::setScale(float newScale)
 {
     m_scale = newScale;
+}
+
+OGRSpatialReference *MapScene::curCS() const
+{
+    return m_curCS;
+}
+
+const OGREnvelope& MapScene::envelope()
+{
+    return m_envelope;
 }

@@ -1,9 +1,11 @@
 #include "mapview.h"
-#include    <QMouseEvent>
-#include    <QPoint>
 
 MapView::MapView(QWidget *parent):QGraphicsView(parent)
 {
+    setRenderHints(QPainter::Antialiasing | QPainter::SmoothPixmapTransform); // 启用抗锯齿和平滑的像素转换
+    setCursor(Qt::OpenHandCursor);   //设置鼠标光标
+    setMouseTracking(true);       //设置鼠标跟踪
+    setDragMode(ScrollHandDrag);   //设置拖动模式
 }
 
 MapView::~MapView()
@@ -19,7 +21,7 @@ void MapView::mousePressEvent(QMouseEvent *event)
             m_dragging = true;
         }
     }
-    event->ignore(); //事件冒泡
+    QGraphicsView::mousePressEvent(event);
 }
 
 void MapView::mouseReleaseEvent(QMouseEvent *event){
@@ -30,19 +32,28 @@ void MapView::mouseReleaseEvent(QMouseEvent *event){
         QPoint dragMove = event->pos() - m_dragStart;
         emit mouseDragMove(dragMove);
     }
+    QGraphicsView::mouseReleaseEvent(event);
 }
 
 void MapView::mouseMoveEvent(QMouseEvent *event)
 {
-    QPoint point=event->pos();      //QGraphicsView的坐标
-    emit mouseMovePoint(point);     //发射信号
+    if(m_dragging){
+        QPoint point=event->pos();      //QGraphicsView的坐标
+        auto delta = point - m_dragStart;
+        m_dragStart = event->pos();
+        horizontalScrollBar()->setValue(horizontalScrollBar()->value() - delta.x());
+        verticalScrollBar()->setValue(verticalScrollBar()->value() - delta.y());
+        emit mouseMovePoint(point);     //发射信号
+    }
     QGraphicsView::mouseMoveEvent(event);
 }
 
 void MapView::wheelEvent(QWheelEvent *event)
 {
-    const double scaleFactor = -0.001; // 定义缩放的速率
-    emit mouseWheelMove(event->angleDelta().y()*scaleFactor);
+    const double scaleFactor = 0.001; // 定义缩放的速率
+    auto angle = event->angleDelta().y()*scaleFactor;
+    scale(1+angle, 1+angle);
+    //emit mouseWheelMove(event->angleDelta().y()*scaleFactor);
 }
 
 MapView::InteractionState MapView::getCurrentState() const

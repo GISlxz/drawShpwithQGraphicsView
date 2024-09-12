@@ -3,6 +3,9 @@
 
 #include <QGraphicsView>
 #include <QObject>
+#include <QMouseEvent>
+#include <QPoint>
+#include <QScrollBar>
 
 class MapView : public QGraphicsView
 {

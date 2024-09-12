@@ -24,15 +24,20 @@ public:
     QPointF ScenePoint2CSPoint(const QPointF& scenePoint);
     QPointF CSPoint2ScenePoint(const QPointF& cSPoint);
     QString getCSName();
-    void drawPolygons(GeoData* geodata);
-    void addPolygontoScene(OGRFeatureUniquePtr& tarPolygon);
+    void drawShp(GeoData* geodata);
+    void addPolygontoScene(OGRGeometry* poGeometry);
+    void addLineStringtoScene(OGRGeometry* poGeometry);
     void moveExtent(QPoint movePoint);
     void changeScale(float ratio);
     float scale() const;
     void setScale(float newScale);
 
+    OGRSpatialReference *curCS() const;
+
+    const OGREnvelope& envelope();
+
 private:
-    OGRSpatialReference* m_curCS; //当前坐标系
+    OGRSpatialReference* m_curCS = nullptr; //当前坐标系
     OGREnvelope m_envelope; //当前显示范围对应地理范围
     float m_scale; //缩放比
 };

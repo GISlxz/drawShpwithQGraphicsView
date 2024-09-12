@@ -6,6 +6,7 @@
 #include "mapscene.h"
 #include "gisdatamanager.h"
 #include "mapview.h"
+#include "geodatamodel.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -24,7 +25,7 @@ private:
 
     MapView* m_MapView;   //view
     MapScene  *m_scene;     //场景
-    GISDataManager *m_GISDataManager;
+    GeoDataModel *m_GISDataModel; //gis数据管理
 
 private:
     void drawAllData();
@@ -38,7 +39,7 @@ private:
     QLabel  *labCurCS; //当前坐标系
     QLabel  *labViewCord; //当前view坐标
     QLabel  *labSceneCord; //当前scene坐标
-    QLabel  *labScale;
+    QLabel  *labScale;  //当前缩放比
     QLabel  *labCSCord; //当前地理坐标
     QLabel  *labItemCord; //当前要素坐标
     QLabel  *labItemInfo; //当前要素信息
@@ -46,5 +47,7 @@ private:
     // QWidget interface
 protected:
     void mousePressEvent(QMouseEvent *event);
+private slots:
+    void on_actionOpenFile_triggered();
 };
 #endif // MAINWINDOW_H

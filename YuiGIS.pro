@@ -10,6 +10,7 @@ CONFIG += c++17
 
 SOURCES += \
     geodata.cpp \
+    geodatamodel.cpp \
     gisdatamanager.cpp \
     main.cpp \
     mainwindow.cpp \
@@ -18,6 +19,7 @@ SOURCES += \
 
 HEADERS += \
     geodata.h \
+    geodatamodel.h \
     gisdatamanager.h \
     mainwindow.h \
     mapscene.h \
